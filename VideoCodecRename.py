@@ -6,11 +6,10 @@ import subprocess
 import json
 import threading
 
+APP_NAME = 'CodecFinderUtility'
 VERSION_NUMBER = '2.0-dev'
 
 VIDEO_EXTENSIONS = ['.mov', '.mp4', '.mkv', '.avi', '.m4v', '.mpg']
-VIDEO_CODECS = ['utvideo', 'dnxhd', 'h265', 'h264', 'xvid', 'mpeg4', 'msmpeg4v3', 'error']
-VIDEO_CODEC_COUNTS = {codec: 0 for codec in VIDEO_CODECS}
 
 stop_flag = threading.Event()
 
@@ -18,8 +17,7 @@ stop_flag = threading.Event()
 
 def setup_window():
     window = tk.Tk()
-    greeting = tk.Label(window, text=f'CodecFinderUtility {VERSION_NUMBER}', fg='white', bg='purple')
-    greeting.pack()
+    window.title(f'{APP_NAME} {VERSION_NUMBER}')
     return window
 
 def setup_entry(window):
@@ -33,8 +31,8 @@ def setup_buttons(window):
         ('List All Files', 'grey', lambda event: start_thread(list_all, path_entry.get(), 'File List Operation')),
         ('Find Video Files (list codec)', 'blue', lambda event: start_thread(find_videos, path_entry.get(), 'Video Search Operation')),
         ('Find non-HEVC', 'purple', lambda event: start_thread(find_nonHEVC, path_entry.get(), 'Non-HEVC Video Search Operation')),
-        #('Add Video Codec To File Name', 'green', add_pressed),
-        #('Remove Video Codec From File Name', 'red', remove_pressed),
+        ('Add Codec To Name', 'green', lambda event: start_thread(add_codec_to_name, path_entry.get(), 'Add Video Codec To File Name')),
+        ('Remove Codec From Name', 'red', lambda event: start_thread(remove_codec_from_name, path_entry.get(), 'Remove Video Codec From File Name')),
         ('Clear Output Display', 'orange', lambda event: clear_screen_pressed(event), 25),
         ('Stop Processing', 'red', lambda event: stop_processing_pressed(event)),
     ]
@@ -175,54 +173,67 @@ def list_all(path):
         update_progress_bar(idx + 1, len(all_files))
 
 
-#def add_pressed(event):
-#    path = path_entry.get()
-#    total_count = 0
-#    video_count = 0
-#    files = []
-#
-#    output_box.insert('1.0', f'Add Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
-#
-#    for r, d, f in sorted(os.walk(path, topdown=True)):
-#        for file in f:
-#            total_count += 1
-#            if is_video_file(file) and '[' not in file:
-#                current = os.path.join(r, file)
-#                try:
-#                    metadata = FFProbe(str(current))
-#                    for stream in metadata.streams:
-#                        codec = stream.codec()
-#                        if codec in VIDEO_CODECS:
-#                            video_count += 1
-#                            VIDEO_CODEC_COUNTS[codec] += 1
-#                            new_name = f'{current[:-len(extension)]}[{codec}]{extension}'
-#                            os.rename(current, new_name)
-#                            output_box.insert('1.0', f'New name: {new_name}\n')
-#                except:
-#                    VIDEO_CODEC_COUNTS['error'] += 1
-#                    error_name = f'{current[:-4]}[ERROR]{current[-4:]}'
-#                    os.rename(current, error_name)
-#                    output_box.insert('1.0', f'Error renaming: {error_name}\n')
-#
-#    output_box.insert('1.0', f'{"-" * 20}\nFiles Renamed: {video_count}\nFiles Scanned: {total_count}\nErrors Encountered: {VIDEO_CODEC_COUNTS["error"]}\nVideo Rename Operation Completed: {datetime.datetime.now()}\n{"-" * 20}\n')
+def add_codec_to_name(path):
+    errors = 0
+    total_count = 0
+    video_count = 0
+    all_files = get_all_files(path)
+    update_progress_bar(0, len(all_files))
 
-#def remove_pressed(event):
-#    path = path_entry.get()
-#    total_count = 0
-#
-#    output_box.insert('1.0', f'Remove Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
-#
-#    for r, d, f in sorted(os.walk(path, topdown=True)):
-#        for file in f:
-#            current = os.path.join(r, file)
-#            if '[' in file:
-#                base_name = re.sub(r'\[.*?\]', '', current)
-#                final_name = f'{base_name[:-4]}{base_name[-4:]}'
-#                os.rename(current, final_name)
-#                total_count += 1
-#                output_box.insert('1.0', f'New Name: {final_name}\n')
-#
-#    output_box.insert('1.0', f'{"-" * 20}\nFiles Renamed: {total_count}\nCodec Remove Operation Completed: {datetime.datetime.now()}\n{"-" * 20}\n')
+    for idx, file in enumerate(all_files):
+        if stop_flag.is_set():
+            break
+        total_count += 1
+        if is_video_file(file):
+            extension = os.path.splitext(file)[1]
+            try:
+                codec = get_video_codec(file)
+                base_name = os.path.splitext(file)[0]
+                if f'[{codec}]' not in base_name:
+                    new_name = f'{base_name}[{codec}]{extension}'
+                    os.rename(file, new_name)
+                    video_count += 1
+                    output_box.insert('1.0', f'Renamed: {new_name}\n')
+                else:
+                    output_box.insert('1.0', f'Skipped (codec already in name): {file}\n')
+            except Exception as e:
+                errors += 1
+                error_name = f'{base_name}[ERROR]{extension}'
+                os.rename(file, error_name)
+                output_box.insert('1.0', f'Error renaming: {error_name}\n')
+        update_progress_bar(idx + 1, len(all_files))
+
+    output_box.insert('1.0', f'{"-" * 20}\nFiles Renamed: {video_count}\nFiles Scanned: {total_count}\nErrors Encountered: {errors}\n', ('UI'))
+
+
+def remove_codec_from_name(path):
+    total_count = 0
+    errors = 0
+    all_files = get_all_files(path)
+    update_progress_bar(0, len(all_files))
+
+    for idx, file in enumerate(all_files):
+        if stop_flag.is_set():
+            break
+        if is_video_file(file):
+            codec = get_video_codec(file)
+            if codec:
+                base_name = os.path.splitext(file)[0]
+                extension = os.path.splitext(file)[1]
+                if f'[{codec}]' in base_name:
+                    final_name = f'{base_name.split(f"[{codec}]")[0]}{extension}'
+                    try:
+                        os.rename(file, final_name)
+                        total_count += 1
+                        output_box.insert('1.0', f'Renamed: {final_name}\n')
+                    except Exception as e:
+                        errors += 1
+                        output_box.insert('1.0', f'Error renaming: {file} - {str(e)}\n')
+        update_progress_bar(idx + 1, len(all_files))
+
+    output_box.insert('1.0', f'{"-" * 20}\nFiles Renamed: {total_count}\nErrors Encountered: {errors}\nCodec Remove Operation Completed.\n', ('UI'))
+
+
 
 window = setup_window()
 path_entry = setup_entry(window)
