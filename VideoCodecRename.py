@@ -49,37 +49,37 @@ def setup_output_box(window):
 def clear_screen_pressed(event):
     output_box.delete(1.0, tk.END)
 
-def add_pressed(event):
-    path = path_entry.get()
-    total_count = 0
-    video_count = 0
-    files = []
-
-    output_box.insert('1.0', f'Add Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
-
-    for r, d, f in sorted(os.walk(path, topdown=True)):
-        for file in f:
-            total_count += 1
-            extension = os.path.splitext(file)[1].lower()
-            if '[' not in file and extension in VIDEO_EXTENSIONS:
-                current = os.path.join(r, file)
-                try:
-                    metadata = FFProbe(str(current))
-                    for stream in metadata.streams:
-                        codec = stream.codec()
-                        if codec in VIDEO_CODECS:
-                            video_count += 1
-                            VIDEO_CODEC_COUNTS[codec] += 1
-                            new_name = f'{current[:-len(extension)]}[{codec}]{extension}'
-                            os.rename(current, new_name)
-                            output_box.insert('1.0', f'New name: {new_name}\n')
-                except:
-                    VIDEO_CODEC_COUNTS['error'] += 1
-                    error_name = f'{current[:-4]}[ERROR]{current[-4:]}'
-                    os.rename(current, error_name)
-                    output_box.insert('1.0', f'Error renaming: {error_name}\n')
-
-    output_box.insert('1.0', f'{"-" * 20}\nFiles Renamed: {video_count}\nFiles Scanned: {total_count}\nErrors Encountered: {VIDEO_CODEC_COUNTS["error"]}\nVideo Rename Operation Completed: {datetime.datetime.now()}\n{"-" * 20}\n')
+#def add_pressed(event):
+#    path = path_entry.get()
+#    total_count = 0
+#    video_count = 0
+#    files = []
+#
+#    output_box.insert('1.0', f'Add Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
+#
+#    for r, d, f in sorted(os.walk(path, topdown=True)):
+#        for file in f:
+#            total_count += 1
+#            extension = os.path.splitext(file)[1].lower()
+#            if '[' not in file and extension in VIDEO_EXTENSIONS:
+#                current = os.path.join(r, file)
+#                try:
+#                    metadata = FFProbe(str(current))
+#                    for stream in metadata.streams:
+#                        codec = stream.codec()
+#                        if codec in VIDEO_CODECS:
+#                            video_count += 1
+#                            VIDEO_CODEC_COUNTS[codec] += 1
+#                            new_name = f'{current[:-len(extension)]}[{codec}]{extension}'
+#                            os.rename(current, new_name)
+#                            output_box.insert('1.0', f'New name: {new_name}\n')
+#                except:
+#                    VIDEO_CODEC_COUNTS['error'] += 1
+#                    error_name = f'{current[:-4]}[ERROR]{current[-4:]}'
+#                    os.rename(current, error_name)
+#                    output_box.insert('1.0', f'Error renaming: {error_name}\n')
+#
+#    output_box.insert('1.0', f'{"-" * 20}\nFiles Renamed: {video_count}\nFiles Scanned: {total_count}\nErrors Encountered: {VIDEO_CODEC_COUNTS["error"]}\nVideo Rename Operation Completed: {datetime.datetime.now()}\n{"-" * 20}\n')
 
 def get_video_codec(file_path):
     try:
@@ -166,23 +166,23 @@ def list_all_pressed(event):
     path = path_entry.get()
     threading.Thread(target=list_all, args=(path,)).start()
 
-def remove_pressed(event):
-    path = path_entry.get()
-    total_count = 0
-
-    output_box.insert('1.0', f'Remove Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
-
-    for r, d, f in sorted(os.walk(path, topdown=True)):
-        for file in f:
-            current = os.path.join(r, file)
-            if '[' in file:
-                base_name = re.sub(r'\[.*?\]', '', current)
-                final_name = f'{base_name[:-4]}{base_name[-4:]}'
-                os.rename(current, final_name)
-                total_count += 1
-                output_box.insert('1.0', f'New Name: {final_name}\n')
-
-    output_box.insert('1.0', f'{"-" * 20}\nFiles Renamed: {total_count}\nCodec Remove Operation Completed: {datetime.datetime.now()}\n{"-" * 20}\n')
+#def remove_pressed(event):
+#    path = path_entry.get()
+#    total_count = 0
+#
+#    output_box.insert('1.0', f'Remove Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
+#
+#    for r, d, f in sorted(os.walk(path, topdown=True)):
+#        for file in f:
+#            current = os.path.join(r, file)
+#            if '[' in file:
+#                base_name = re.sub(r'\[.*?\]', '', current)
+#                final_name = f'{base_name[:-4]}{base_name[-4:]}'
+#                os.rename(current, final_name)
+#                total_count += 1
+#                output_box.insert('1.0', f'New Name: {final_name}\n')
+#
+#    output_box.insert('1.0', f'{"-" * 20}\nFiles Renamed: {total_count}\nCodec Remove Operation Completed: {datetime.datetime.now()}\n{"-" * 20}\n')
 
 window = setup_window()
 path_entry = setup_entry(window)
