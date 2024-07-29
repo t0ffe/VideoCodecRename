@@ -43,9 +43,9 @@ def setup_entry(window):
 def setup_buttons(window):
     buttons = [
         ('List All Files', 'grey', list_all_pressed),
-        ('Find Video Files', 'blue', find_videos_pressed),
-        ('Add Video Codec To File Name', 'green', add_pressed),
-        ('Remove Video Codec From File Name', 'red', remove_pressed),
+        ('Find Video Files (list codec)', 'blue', find_videos_pressed),
+        #('Add Video Codec To File Name', 'green', add_pressed),
+        #('Remove Video Codec From File Name', 'red', remove_pressed),
         ('Clear Output Display', 'orange', clear_screen_pressed, 25)
     ]
     
@@ -104,10 +104,17 @@ def find_videos_pressed(event):
     for r, d, f in sorted(os.walk(path, topdown=True)):
         for file in f:
             extension = os.path.splitext(file)[1].lower()
-            if extension in [ext.lower() for ext in VIDEO_EXTENSIONS]:
+            if extension in VIDEO_EXTENSIONS:
                 current = os.path.join(r, file)
                 total_count += 1
-                output_box.insert('1.0', current + '\n')
+                try:
+                    metadata = FFProbe(str(current))
+                    for stream in metadata.streams:
+                        if stream.is_video():
+                            codec = stream.codec()
+                            output_box.insert('1.0', f'{current} - Codec: {codec}\n')
+                except Exception as e:
+                    output_box.insert('1.0', f'Error processing {current}: {str(e)}\n')
 
     output_box.insert('1.0', '-' * 20 + '\n' + f'Videos Found: {total_count}\n' + 'Video Search Operation Completed: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
 
