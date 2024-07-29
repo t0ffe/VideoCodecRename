@@ -1,6 +1,18 @@
 # VideoCodecRename
 Python program using ffprobe3 to recursively search all files in a directory, identify video files, and add their codec to the file name for easy filtering in any system. Easily modified to find, rename, move, and sort all kinds of files using ffmpeg. This is just the video specific program.
 
+## Added features in this fork
+ - [x] Refactored whole code
+ - [x] **Added Threading** for UI ( UI doesn't freeze when processing )
+ - [x] **Added Multiprocessing** for file operations ( **x16** speed boost )
+   - Processing a folder with 176 files went from **2:20** to **0:09**
+ - [x] Works on Windows ( including long pathnames )
+ - [x] Added total runtime metric
+ - [x] Text Output is fullwidth to window
+ - [x] Text Output is easier to read ( _colors!_ )
+
+
+
 ![VideoCodecRename_Main](https://github.com/user-attachments/assets/cbfbc240-d185-44e0-b82e-7a34cda73a3d)
 
 It requires ffprobe3, which can be pip installed. 
