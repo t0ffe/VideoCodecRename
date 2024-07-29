@@ -55,9 +55,9 @@ def setup_buttons(window):
         button.bind('<Button-1>', command)
 
 def setup_output_box(window):
-    tk.Label(window, text='Output').pack()
+    tk.Label(window, text='Output').pack(fill='x')
     output_box = tk.Text(window, width=100, height=50)
-    output_box.pack()
+    output_box.pack(fill='both', expand=True)
     return output_box
 
 def clear_screen_pressed(event):
