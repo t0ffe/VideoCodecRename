@@ -12,7 +12,6 @@ VIDEO_EXTENSIONS = ['.mov', '.mp4', '.mkv', '.avi', '.m4v', '.mpg']
 VIDEO_CODECS = ['utvideo', 'dnxhd', 'h265', 'h264', 'xvid', 'mpeg4', 'msmpeg4v3', 'error']
 VIDEO_CODEC_COUNTS = {codec: 0 for codec in VIDEO_CODECS}
 
-# Global flag to control processing
 stop_flag = threading.Event()
 
 ### Setup functions -------------------------------------------------------------------------
@@ -71,7 +70,6 @@ def update_progress_bar(current_index, total_files):
     window.update_idletasks()
 
 def is_video_file(file_name):
-    # Extract the file extension and check against VIDEO_EXTENSIONS
     extension = os.path.splitext(file_name)[1].lower()
     return extension in VIDEO_EXTENSIONS
 
@@ -79,7 +77,7 @@ def get_all_files(path):
     return [os.path.join(r, file) for r, d, f in sorted(os.walk(path, topdown=True)) for file in f]
 
 def stop_processing_pressed(event):
-    stop_flag.set()  # Signal to stop processing
+    stop_flag.set()
 
 def get_video_codec(file_path):
     try:
@@ -129,7 +127,7 @@ def find_videos(path):
 
 def find_videos_pressed(event):
     global stop_flag
-    stop_flag.clear()  # Reset the stop flag
+    stop_flag.clear()
     path = path_entry.get()
     threading.Thread(target=perform_operation_with_timing, args=('Video Search Operation', find_videos, path)).start()
 
@@ -154,7 +152,7 @@ def find_nonHEVC(path):
 
 def find_nonHEVC_pressed(event):
     global stop_flag
-    stop_flag.clear()  # Reset the stop flag
+    stop_flag.clear()
     path = path_entry.get()
     threading.Thread(target=perform_operation_with_timing, args=('Non-HEVC Video Search Operation', find_nonHEVC, path)).start()
 
@@ -172,7 +170,7 @@ def list_all(path):
 
 def list_all_pressed(event):
     global stop_flag
-    stop_flag.clear()  # Reset the stop flag
+    stop_flag.clear()
     path = path_entry.get()
     threading.Thread(target=perform_operation_with_timing, args=('File List Operation', list_all, path)).start()
 
