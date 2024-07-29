@@ -49,6 +49,12 @@ def setup_output_box(window):
 def clear_screen_pressed(event):
     output_box.delete(1.0, tk.END)
 
+
+def is_video_file(file_name):
+    # Extract the file extension and check against VIDEO_EXTENSIONS
+    extension = os.path.splitext(file_name)[1].lower()
+    return extension in VIDEO_EXTENSIONS
+
 #def add_pressed(event):
 #    path = path_entry.get()
 #    total_count = 0
@@ -60,8 +66,7 @@ def clear_screen_pressed(event):
 #    for r, d, f in sorted(os.walk(path, topdown=True)):
 #        for file in f:
 #            total_count += 1
-#            extension = os.path.splitext(file)[1].lower()
-#            if '[' not in file and extension in VIDEO_EXTENSIONS:
+#            if is_video_file(file) and '[' not in file:
 #                current = os.path.join(r, file)
 #                try:
 #                    metadata = FFProbe(str(current))
@@ -105,8 +110,7 @@ def find_videos(path):
 
     for r, d, f in sorted(os.walk(path, topdown=True)):
         for file in f:
-            extension = os.path.splitext(file)[1].lower()
-            if extension in VIDEO_EXTENSIONS:
+            if is_video_file(file):
                 current = os.path.join(r, file)
                 total_count += 1
                 codec = get_video_codec(current)
@@ -129,8 +133,7 @@ def find_nonHEVC(path):
 
     for r, d, f in sorted(os.walk(path, topdown=True)):
         for file in f:
-            extension = os.path.splitext(file)[1].lower()
-            if extension in VIDEO_EXTENSIONS:
+            if is_video_file(file):
                 current = os.path.join(r, file)
                 codec = get_video_codec(current)
                 if codec != "hevc":
