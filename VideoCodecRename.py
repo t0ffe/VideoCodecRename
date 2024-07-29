@@ -150,6 +150,7 @@ def find_videos(path):
             output_box.update_idletasks()
         
         update_progress_bar(idx + 1, len(all_files))
+    output_box.insert('1.0', f'Total Videos Found: {total_count}\n', ('bold', 'UI'))
 
 def find_nonHEVC(path):
     total_count = 0
@@ -177,7 +178,8 @@ def find_nonHEVC(path):
             output_box.insert('1.0', f'  Non-HEVC Videos Count: {count}\n\n')
             output_box.insert('1.0', f'Folder: {folder}\n')
             output_box.update_idletasks()
-    
+        output_box.insert('1.0', f'Total non-HEVC Found: {total_count}\n', ('bold', 'UI'))
+        
     if total_count == 0 and not stop_flag.is_set():
         output_box.insert('1.0', f'\n █████  ██      ██          ███████ ██ ██      ███████ ███████     ██   ██ ███████ ██    ██  ██████ \n██   ██ ██      ██          ██      ██ ██      ██      ██          ██   ██ ██      ██    ██ ██      \n███████ ██      ██          █████   ██ ██      █████   ███████     ███████ █████   ██    ██ ██      \n██   ██ ██      ██          ██      ██ ██      ██           ██     ██   ██ ██       ██  ██  ██      \n██   ██ ███████ ███████     ██      ██ ███████ ███████ ███████     ██   ██ ███████   ████    ██████ \n\n')
 
@@ -192,6 +194,7 @@ def list_all(path):
         output_box.insert('1.0', f'{file}\n')
         update_progress_bar(idx + 1, len(all_files))
 
+    output_box.insert('1.0', f'Total Files Found: {total_count}\n', ('bold', 'UI'))
 
 def add_codec_to_name(path):
     errors = 0
