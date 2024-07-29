@@ -100,6 +100,7 @@ def get_video_codec(file_path):
 def find_videos(path):
     total_count = 0
 
+    start_time = datetime.datetime.now()  # Record start time
     output_box.insert('1.0', f'Video Search Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
 
     for r, d, f in sorted(os.walk(path, topdown=True)):
@@ -111,8 +112,10 @@ def find_videos(path):
                 codec = get_video_codec(current)
                 output_box.insert('1.0', f'{current} - Codec: {codec}\n')
                 output_box.update_idletasks()
-
-    output_box.insert('1.0', f'{"-" * 20}\nVideos Found: {total_count}\nVideo Search Operation Completed: {datetime.datetime.now()}\n{"-" * 20}\n')
+    
+    end_time = datetime.datetime.now()  # Record end time
+    runtime = end_time - start_time  # Calculate runtime
+    output_box.insert('1.0', f'{"-" * 20}\nVideos Found: {total_count}\nVideo Search Operation Completed: {datetime.datetime.now()}\nTotal Runtime: {runtime}\n{"-" * 20}\n')
 
 def find_videos_pressed(event):
     path = path_entry.get()
@@ -121,6 +124,7 @@ def find_videos_pressed(event):
 def find_nonHEVC(path):
     total_count = 0
 
+    start_time = datetime.datetime.now()
     output_box.insert('1.0', f'Video Search Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
 
     for r, d, f in sorted(os.walk(path, topdown=True)):
@@ -136,8 +140,9 @@ def find_nonHEVC(path):
     if total_count == 0:
         output_box.insert('1.0', f'\n █████  ██      ██          ███████ ██ ██      ███████ ███████     ██   ██ ███████ ██    ██  ██████ \n██   ██ ██      ██          ██      ██ ██      ██      ██          ██   ██ ██      ██    ██ ██      \n███████ ██      ██          █████   ██ ██      █████   ███████     ███████ █████   ██    ██ ██      \n██   ██ ██      ██          ██      ██ ██      ██           ██     ██   ██ ██       ██  ██  ██      \n██   ██ ███████ ███████     ██      ██ ███████ ███████ ███████     ██   ██ ███████   ████    ██████ \n\n')
 
-
-    output_box.insert('1.0', f'{"-" * 20}\nVideos Found: {total_count}\nVideo Search Operation Completed: {datetime.datetime.now()}\n{"-" * 20}\n')
+    end_time = datetime.datetime.now()  # Record end time
+    runtime = end_time - start_time  # Calculate runtime
+    output_box.insert('1.0', f'{"-" * 20}\nVideos Found: {total_count}\nVideo Search Operation Completed: {datetime.datetime.now()}\nTotal Runtime: {runtime}\n{"-" * 20}\n')
 
 def find_nonHEVC_pressed(event):
     path = path_entry.get()
@@ -146,13 +151,16 @@ def find_nonHEVC_pressed(event):
 def list_all(path):
     total_count = 0
 
+    start_time = datetime.datetime.now()
     for r, d, f in sorted(os.walk(path, topdown=True)):
         for file in f:
             current = os.path.join(r, file)
             total_count += 1
             output_box.insert('1.0', f'{current}\n')
-
-    output_box.insert('1.0', f'{"-" * 20}\nFiles Found: {total_count}\nFile List Operation Completed: {datetime.datetime.now()}\n{"-" * 20}\n')
+    
+    end_time = datetime.datetime.now()  # Record end time
+    runtime = end_time - start_time  # Calculate runtime
+    output_box.insert('1.0', f'{"-" * 20}\nFiles Found: {total_count}\nFile List Operation Completed: {datetime.datetime.now()}\nTotal Runtime: {runtime}\n{"-" * 20}\n')
 
 def list_all_pressed(event):
     path = path_entry.get()
