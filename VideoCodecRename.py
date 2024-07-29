@@ -47,6 +47,7 @@ def setup_buttons(window):
     buttons = [
         ('List All Files', 'grey', list_all_pressed),
         ('Find Video Files (list codec)', 'blue', find_videos_pressed),
+        ('Find non-HEVC', 'red', find_nonHEVC_pressed),
         #('Add Video Codec To File Name', 'green', add_pressed),
         #('Remove Video Codec From File Name', 'red', remove_pressed),
         ('Clear Output Display', 'orange', clear_screen_pressed, 25)
@@ -134,6 +135,28 @@ def find_videos(path):
 def find_videos_pressed(event):
     path = path_entry.get()
     threading.Thread(target=find_videos, args=(path,)).start()
+
+def find_nonHEVC(path):
+    total_count = 0
+
+    output_box.insert('1.0', 'Video Search Operation Started: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
+
+    for r, d, f in sorted(os.walk(path, topdown=True)):
+        for file in f:
+            extension = os.path.splitext(file)[1].lower()
+            if extension in VIDEO_EXTENSIONS:
+                current = os.path.join(r, file)
+                codec = get_video_codec(current)
+                if codec != "hevc":
+                    total_count += 1
+                    output_box.insert('1.0', f'{current} - Codec: {codec}\n')
+                    output_box.update_idletasks()
+
+    output_box.insert('1.0', '-' * 20 + '\n' + f'Videos Found: {total_count}\n' + 'Video Search Operation Completed: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
+
+def find_nonHEVC_pressed(event):
+    path = path_entry.get()
+    threading.Thread(target=find_nonHEVC, args=(path,)).start()
 
 def list_all(path):
     total_count = 0
