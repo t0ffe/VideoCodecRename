@@ -146,10 +146,9 @@ def find_videos(path):
             output_box.insert('1.0', 'Processing stopped by user.\n')
             break
         if is_video_file(file):
-            current = file
             total_count += 1
-            codec = get_video_codec(current)
-            output_box.insert('1.0', f'{current} - Codec: {codec}\n')
+            codec = get_video_codec(file)
+            output_box.insert('1.0', f'{file} - Codec: {codec}\n')
             output_box.update_idletasks()
         
         update_progress_bar(idx + 1, len(all_files))
@@ -193,9 +192,8 @@ def list_all(path):
         if stop_flag.is_set():
             output_box.insert('1.0', 'Processing stopped by user.\n')
             break
-        current = file
         total_count += 1
-        output_box.insert('1.0', f'{current}\n')
+        output_box.insert('1.0', f'{file}\n')
         update_progress_bar(idx + 1, len(all_files))
 
 def list_all_pressed(event):
