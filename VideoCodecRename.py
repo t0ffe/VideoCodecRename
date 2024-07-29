@@ -32,11 +32,11 @@ def setup_buttons(window):
     buttons = [
         ('List All Files', 'grey', lambda event: start_thread(list_all, path_entry.get(), 'File List Operation')),
         ('Find Video Files (list codec)', 'blue', lambda event: start_thread(find_videos, path_entry.get(), 'Video Search Operation')),
-        ('Find non-HEVC', 'red', lambda event: start_thread(find_nonHEVC, path_entry.get(), 'Non-HEVC Video Search Operation')),
+        ('Find non-HEVC', 'purple', lambda event: start_thread(find_nonHEVC, path_entry.get(), 'Non-HEVC Video Search Operation')),
         #('Add Video Codec To File Name', 'green', add_pressed),
         #('Remove Video Codec From File Name', 'red', remove_pressed),
         ('Clear Output Display', 'orange', lambda event: clear_screen_pressed(event), 25),
-        ('Stop Processing', 'black', lambda event: stop_processing_pressed(event))
+        ('Stop Processing', 'red', lambda event: stop_processing_pressed(event)),
     ]
     
     button_frame = tk.Frame(window)  
@@ -53,6 +53,7 @@ def setup_output_box(window):
     output_box.pack(fill='both', expand=True)
     output_box.tag_configure('bold', font=('Helvetica', 10, 'bold'))
     output_box.tag_configure('red', foreground='white', background='red')
+    output_box.tag_configure('UI', foreground='white', background='gray')
     return output_box
 
 def setup_progress_bar(window):
@@ -100,13 +101,13 @@ def get_video_codec(file_path):
     
 def perform_operation_with_timing(operation_name, operation, *args):
     start_time = datetime.datetime.now()
-    output_box.insert('1.0', f'{operation_name} Started: {start_time}\n{"-" * 20}\n')
+    output_box.insert('1.0', f'{operation_name} Started: {start_time}\n{"-" * 20}\n', ('UI'))
     try:
         operation(*args)
     finally:
         end_time = datetime.datetime.now()
         runtime = end_time - start_time
-        output_box.insert('1.0', f'{"-" * 20}\nTotal Runtime: {runtime}\n{operation_name} Completed: {end_time}\n')
+        output_box.insert('1.0', f'{"-" * 20}\nTotal Runtime: {runtime}\n{operation_name} Completed: {end_time}\n', ('UI'))
 
 def start_thread(operation, *args):
     global stop_flag
@@ -134,6 +135,7 @@ def find_videos(path):
 
 def find_nonHEVC(path):
     total_count = 0
+    folder_stats = {}
     all_files = get_all_files(path)
     update_progress_bar(0, len(all_files))
     for idx, file in enumerate(all_files):
@@ -145,8 +147,19 @@ def find_nonHEVC(path):
                 total_count += 1
                 output_box.insert('1.0', f'{file} - Codec: {codec}\n')
                 output_box.update_idletasks()
+                parent_folder = os.path.basename(os.path.dirname(file))
+                folder = os.path.join(os.path.basename(path), parent_folder)
+                if folder not in folder_stats:
+                    folder_stats[folder] = 0
+                folder_stats[folder] += 1
         update_progress_bar(idx + 1, len(all_files))
 
+    if total_count != 0:
+        for folder, count in folder_stats.items():
+            output_box.insert('1.0', f'  Non-HEVC Videos Count: {count}\n\n')
+            output_box.insert('1.0', f'Folder: {folder}\n')
+            output_box.update_idletasks()
+    
     if total_count == 0 and not stop_flag.is_set():
         output_box.insert('1.0', f'\n █████  ██      ██          ███████ ██ ██      ███████ ███████     ██   ██ ███████ ██    ██  ██████ \n██   ██ ██      ██          ██      ██ ██      ██      ██          ██   ██ ██      ██    ██ ██      \n███████ ██      ██          █████   ██ ██      █████   ███████     ███████ █████   ██    ██ ██      \n██   ██ ██      ██          ██      ██ ██      ██           ██     ██   ██ ██       ██  ██  ██      \n██   ██ ███████ ███████     ██      ██ ███████ ███████ ███████     ██   ██ ███████   ████    ██████ \n\n')
 
