@@ -7,7 +7,7 @@ import json
 import threading
 import multiprocessing
 
-APP_NAME = 'CodecFinderUtility'
+APP_NAME = 'VideoCodecRename'
 VERSION_NUMBER = '2.0-dev'
 
 VIDEO_EXTENSIONS = ['.mov', '.mp4', '.mkv', '.avi', '.m4v', '.mpg']
