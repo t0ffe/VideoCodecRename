@@ -27,23 +27,43 @@ def setup_entry(window):
     return path_entry
 
 def setup_buttons(window):
-    buttons = [
-        ('List All Files', 'grey', lambda event: start_thread(list_all, path_entry.get(), 'File List Operation')),
-        ('Find Video Files (list codec)', 'blue', lambda event: start_thread(find_videos, path_entry.get(), 'Video Search Operation')),
-        ('Find non-HEVC', 'purple', lambda event: start_thread(find_nonHEVC, path_entry.get(), 'Non-HEVC Video Search Operation')),
-        ('Add Codec To Name', 'green', lambda event: start_thread(add_codec_to_name, path_entry.get(), 'Add Video Codec To File Name')),
-        ('Remove Codec From Name', 'red', lambda event: start_thread(remove_codec_from_name, path_entry.get(), 'Remove Video Codec From File Name')),
-        ('Clear Output Display', 'orange', lambda event: clear_screen_pressed(event), 25),
-        ('Stop Processing', 'red', lambda event: stop_processing_pressed(event)),
-    ]
-    
-    button_frame = tk.Frame(window)  
-    button_frame.pack(pady=10)  
-    
-    for text, color, command, *width in buttons:
-        button = tk.Button(button_frame, text=text, width=width[0] if width else 20, height=2, bg=color, fg='white')
-        button.pack(side='left', padx=5, pady=5)
-        button.bind('<Button-1>', command)
+    main_frame = tk.Frame(window)
+    main_frame.pack(pady=10, padx=10, expand=True, anchor='center')
+
+    frames = {
+        'list': tk.Frame(main_frame),
+        'edit': tk.Frame(main_frame),
+        'meta': tk.Frame(main_frame)
+    }
+
+    for frame in frames.values():
+        frame.pack(side='left', padx=10, fill='y')
+
+    buttons = {
+        'list': [
+            ('List All Files', 'grey', lambda event: start_thread(list_all, path_entry.get(), 'File List Operation')),
+            ('Find Video Files (list codec)', 'blue', lambda event: start_thread(find_videos, path_entry.get(), 'Video Search Operation')),
+            ('Find non-HEVC', 'purple', lambda event: start_thread(find_nonHEVC, path_entry.get(), 'Non-HEVC Video Search Operation'))
+        ],
+        'edit': [
+            ('Add Codec To Name', 'green', lambda event: start_thread(add_codec_to_name, path_entry.get(), 'Add Video Codec To File Name')),
+            ('Remove Codec From Name', 'red', lambda event: start_thread(remove_codec_from_name, path_entry.get(), 'Remove Video Codec From File Name'))
+        ],
+        'meta': [
+            ('Clear Output Display', 'orange', lambda event: clear_screen_pressed(event)),
+            ('Stop Processing', 'red', lambda event: stop_processing_pressed(event))
+        ]
+    }
+
+    def create_buttons(buttons_list, frame):
+        for text, color, command in buttons_list:
+            button = tk.Button(frame, text=text, width=20 if frame != frames['meta'] else 25, height=2, bg=color, fg='white')
+            button.pack(pady=5)
+            button.bind('<Button-1>', command)
+
+    for key, button_list in buttons.items():
+        create_buttons(button_list, frames[key])
+
 
 def setup_output_box(window):
     tk.Label(window, text='Output').pack(fill='x')
