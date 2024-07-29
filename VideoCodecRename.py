@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 import os
 from ffprobe3 import FFProbe
 import datetime
@@ -46,9 +47,19 @@ def setup_output_box(window):
     output_box.pack(fill='both', expand=True)
     return output_box
 
+def setup_progress_bar(window):
+    progress_bar = ttk.Progressbar(window, orient='horizontal', length=100, mode='determinate')
+    progress_bar.pack(fill='x', padx=10, pady=5)
+    return progress_bar
+
 def clear_screen_pressed(event):
     output_box.delete(1.0, tk.END)
+    progress_bar['value'] = 0
 
+def update_progress_bar(value, max_value):
+    progress_bar['maximum'] = max_value
+    progress_bar['value'] = value
+    window.update_idletasks()
 
 def is_video_file(file_name):
     # Extract the file extension and check against VIDEO_EXTENSIONS
@@ -108,14 +119,18 @@ def find_videos(path):
     start_time = datetime.datetime.now()  # Record start time
     output_box.insert('1.0', f'Video Search Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
 
-    for r, d, f in sorted(os.walk(path, topdown=True)):
-        for file in f:
-            if is_video_file(file):
-                current = os.path.join(r, file)
-                total_count += 1
-                codec = get_video_codec(current)
-                output_box.insert('1.0', f'{current} - Codec: {codec}\n')
-                output_box.update_idletasks()
+    all_files = [os.path.join(r, file) for r, d, f in sorted(os.walk(path, topdown=True)) for file in f]
+    update_progress_bar(0, len(all_files))
+
+    for idx, file in enumerate(all_files):
+        if is_video_file(file):
+            current = file
+            total_count += 1
+            codec = get_video_codec(current)
+            output_box.insert('1.0', f'{current} - Codec: {codec}\n')
+            output_box.update_idletasks()
+        
+        update_progress_bar(idx + 1, len(all_files))
     
     end_time = datetime.datetime.now()  # Record end time
     runtime = end_time - start_time  # Calculate runtime
@@ -131,15 +146,19 @@ def find_nonHEVC(path):
     start_time = datetime.datetime.now()
     output_box.insert('1.0', f'Video Search Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
 
-    for r, d, f in sorted(os.walk(path, topdown=True)):
-        for file in f:
-            if is_video_file(file):
-                current = os.path.join(r, file)
-                codec = get_video_codec(current)
-                if codec != "hevc":
-                    total_count += 1
-                    output_box.insert('1.0', f'{current} - Codec: {codec}\n')
-                    output_box.update_idletasks()
+    all_files = [os.path.join(r, file) for r, d, f in sorted(os.walk(path, topdown=True)) for file in f]
+    update_progress_bar(0, len(all_files))
+
+    for idx, file in enumerate(all_files):
+        if is_video_file(file):
+            current = file
+            codec = get_video_codec(current)
+            if codec != "hevc":
+                total_count += 1
+                output_box.insert('1.0', f'{current} - Codec: {codec}\n')
+                output_box.update_idletasks()
+        update_progress_bar(idx + 1, len(all_files))
+
     if total_count == 0:
         output_box.insert('1.0', f'\n █████  ██      ██          ███████ ██ ██      ███████ ███████     ██   ██ ███████ ██    ██  ██████ \n██   ██ ██      ██          ██      ██ ██      ██      ██          ██   ██ ██      ██    ██ ██      \n███████ ██      ██          █████   ██ ██      █████   ███████     ███████ █████   ██    ██ ██      \n██   ██ ██      ██          ██      ██ ██      ██           ██     ██   ██ ██       ██  ██  ██      \n██   ██ ███████ ███████     ██      ██ ███████ ███████ ███████     ██   ██ ███████   ████    ██████ \n\n')
 
@@ -155,11 +174,15 @@ def list_all(path):
     total_count = 0
 
     start_time = datetime.datetime.now()
-    for r, d, f in sorted(os.walk(path, topdown=True)):
-        for file in f:
-            current = os.path.join(r, file)
-            total_count += 1
-            output_box.insert('1.0', f'{current}\n')
+    
+    all_files = [os.path.join(r, file) for r, d, f in sorted(os.walk(path, topdown=True)) for file in f]
+    update_progress_bar(0, len(all_files))
+    
+    for idx, file in enumerate(all_files):
+        current = file
+        total_count += 1
+        output_box.insert('1.0', f'{current}\n')
+        update_progress_bar(idx + 1, len(all_files))
     
     end_time = datetime.datetime.now()  # Record end time
     runtime = end_time - start_time  # Calculate runtime
@@ -190,6 +213,7 @@ def list_all_pressed(event):
 window = setup_window()
 path_entry = setup_entry(window)
 setup_buttons(window)
+progress_bar = setup_progress_bar(window)
 output_box = setup_output_box(window)
 
 window.mainloop()
