@@ -21,6 +21,9 @@ import os
 from ffprobe3 import FFProbe
 import datetime
 import re
+import subprocess
+import json
+import threading
 
 VERSION_NUMBER = '1.2.0'
 
@@ -95,8 +98,23 @@ def add_pressed(event):
 
     output_box.insert('1.0', '-' * 20 + '\n' + f'Files Renamed: {video_count}\nFiles Scanned: {total_count}\nErrors Encountered: {VIDEO_CODEC_COUNTS["error"]}\n' + 'Video Rename Operation Completed: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
 
-def find_videos_pressed(event):
-    path = path_entry.get()
+def get_video_codec(file_path):
+    try:
+        result = subprocess.run(
+            ['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=codec_name', '-of', 'json', file_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        if result.returncode == 0:
+            info = json.loads(result.stdout)
+            return info['streams'][0]['codec_name'] if info['streams'] else 'unknown'
+        else:
+            raise Exception(result.stderr)
+    except Exception as e:
+        return f'Error: {str(e)}'
+
+def find_videos(path):
     total_count = 0
 
     output_box.insert('1.0', 'Video Search Operation Started: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
@@ -107,19 +125,17 @@ def find_videos_pressed(event):
             if extension in VIDEO_EXTENSIONS:
                 current = os.path.join(r, file)
                 total_count += 1
-                try:
-                    metadata = FFProbe(str(current))
-                    for stream in metadata.streams:
-                        if stream.is_video():
-                            codec = stream.codec()
-                            output_box.insert('1.0', f'{current} - Codec: {codec}\n')
-                except Exception as e:
-                    output_box.insert('1.0', f'Error processing {current}: {str(e)}\n')
+                codec = get_video_codec(current)
+                output_box.insert('1.0', f'{current} - Codec: {codec}\n')
+                output_box.update_idletasks()
 
     output_box.insert('1.0', '-' * 20 + '\n' + f'Videos Found: {total_count}\n' + 'Video Search Operation Completed: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
 
-def list_all_pressed(event):
+def find_videos_pressed(event):
     path = path_entry.get()
+    threading.Thread(target=find_videos, args=(path,)).start()
+
+def list_all(path):
     total_count = 0
 
     for r, d, f in sorted(os.walk(path, topdown=True)):
@@ -129,6 +145,10 @@ def list_all_pressed(event):
             output_box.insert('1.0', current + '\n')
 
     output_box.insert('1.0', '-' * 20 + '\n' + f'Files Found: {total_count}\n' + 'File List Operation Completed: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
+
+def list_all_pressed(event):
+    path = path_entry.get()
+    threading.Thread(target=list_all, args=(path,)).start()
 
 def remove_pressed(event):
     path = path_entry.get()
@@ -152,4 +172,5 @@ window = setup_window()
 path_entry = setup_entry(window)
 setup_buttons(window)
 output_box = setup_output_box(window)
+
 window.mainloop()
