@@ -55,7 +55,7 @@ def add_pressed(event):
     video_count = 0
     files = []
 
-    output_box.insert('1.0', 'Add Operation Started: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
+    output_box.insert('1.0', f'Add Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
 
     for r, d, f in sorted(os.walk(path, topdown=True)):
         for file in f:
@@ -72,14 +72,14 @@ def add_pressed(event):
                             VIDEO_CODEC_COUNTS[codec] += 1
                             new_name = f'{current[:-len(extension)]}[{codec}]{extension}'
                             os.rename(current, new_name)
-                            output_box.insert('1.0', 'New name: ' + new_name + '\n')
+                            output_box.insert('1.0', f'New name: {new_name}\n')
                 except:
                     VIDEO_CODEC_COUNTS['error'] += 1
-                    error_name = current[:-4] + '[ERROR]' + current[-4:]
+                    error_name = f'{current[:-4]}[ERROR]{current[-4:]}'
                     os.rename(current, error_name)
-                    output_box.insert('1.0', 'Error renaming: ' + error_name + '\n')
+                    output_box.insert('1.0', f'Error renaming: {error_name}\n')
 
-    output_box.insert('1.0', '-' * 20 + '\n' + f'Files Renamed: {video_count}\nFiles Scanned: {total_count}\nErrors Encountered: {VIDEO_CODEC_COUNTS["error"]}\n' + 'Video Rename Operation Completed: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
+    output_box.insert('1.0', f'{"-" * 20}\nFiles Renamed: {video_count}\nFiles Scanned: {total_count}\nErrors Encountered: {VIDEO_CODEC_COUNTS["error"]}\nVideo Rename Operation Completed: {datetime.datetime.now()}\n{"-" * 20}\n')
 
 def get_video_codec(file_path):
     try:
@@ -100,7 +100,7 @@ def get_video_codec(file_path):
 def find_videos(path):
     total_count = 0
 
-    output_box.insert('1.0', 'Video Search Operation Started: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
+    output_box.insert('1.0', f'Video Search Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
 
     for r, d, f in sorted(os.walk(path, topdown=True)):
         for file in f:
@@ -112,7 +112,7 @@ def find_videos(path):
                 output_box.insert('1.0', f'{current} - Codec: {codec}\n')
                 output_box.update_idletasks()
 
-    output_box.insert('1.0', '-' * 20 + '\n' + f'Videos Found: {total_count}\n' + 'Video Search Operation Completed: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
+    output_box.insert('1.0', f'{"-" * 20}\nVideos Found: {total_count}\nVideo Search Operation Completed: {datetime.datetime.now()}\n{"-" * 20}\n')
 
 def find_videos_pressed(event):
     path = path_entry.get()
@@ -121,7 +121,7 @@ def find_videos_pressed(event):
 def find_nonHEVC(path):
     total_count = 0
 
-    output_box.insert('1.0', 'Video Search Operation Started: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
+    output_box.insert('1.0', f'Video Search Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
 
     for r, d, f in sorted(os.walk(path, topdown=True)):
         for file in f:
@@ -134,7 +134,7 @@ def find_nonHEVC(path):
                     output_box.insert('1.0', f'{current} - Codec: {codec}\n')
                     output_box.update_idletasks()
 
-    output_box.insert('1.0', '-' * 20 + '\n' + f'Videos Found: {total_count}\n' + 'Video Search Operation Completed: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
+    output_box.insert('1.0', f'{"-" * 20}\nVideos Found: {total_count}\nVideo Search Operation Completed: {datetime.datetime.now()}\n{"-" * 20}\n')
 
 def find_nonHEVC_pressed(event):
     path = path_entry.get()
@@ -147,9 +147,9 @@ def list_all(path):
         for file in f:
             current = os.path.join(r, file)
             total_count += 1
-            output_box.insert('1.0', current + '\n')
+            output_box.insert('1.0', f'{current}\n')
 
-    output_box.insert('1.0', '-' * 20 + '\n' + f'Files Found: {total_count}\n' + 'File List Operation Completed: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
+    output_box.insert('1.0', f'{"-" * 20}\nFiles Found: {total_count}\nFile List Operation Completed: {datetime.datetime.now()}\n{"-" * 20}\n')
 
 def list_all_pressed(event):
     path = path_entry.get()
@@ -159,19 +159,19 @@ def remove_pressed(event):
     path = path_entry.get()
     total_count = 0
 
-    output_box.insert('1.0', 'Remove Operation Started: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
+    output_box.insert('1.0', f'Remove Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
 
     for r, d, f in sorted(os.walk(path, topdown=True)):
         for file in f:
             current = os.path.join(r, file)
             if '[' in file:
                 base_name = re.sub(r'\[.*?\]', '', current)
-                final_name = base_name[:-4] + base_name[-4:]
+                final_name = f'{base_name[:-4]}{base_name[-4:]}'
                 os.rename(current, final_name)
                 total_count += 1
-                output_box.insert('1.0', 'New Name: ' + final_name + '\n')
+                output_box.insert('1.0', f'New Name: {final_name}\n')
 
-    output_box.insert('1.0', '-' * 20 + '\n' + f'Files Renamed: {total_count}\n' + 'Codec Remove Operation Completed: ' + str(datetime.datetime.now()) + '\n' + '-' * 20 + '\n')
+    output_box.insert('1.0', f'{"-" * 20}\nFiles Renamed: {total_count}\nCodec Remove Operation Completed: {datetime.datetime.now()}\n{"-" * 20}\n')
 
 window = setup_window()
 path_entry = setup_entry(window)
