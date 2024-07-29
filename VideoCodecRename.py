@@ -6,7 +6,7 @@ import subprocess
 import json
 import threading
 
-VERSION_NUMBER = '1.2.0'
+VERSION_NUMBER = '2.0-dev'
 
 VIDEO_EXTENSIONS = ['.mov', '.mp4', '.mkv', '.avi', '.m4v', '.mpg']
 VIDEO_CODECS = ['utvideo', 'dnxhd', 'h265', 'h264', 'xvid', 'mpeg4', 'msmpeg4v3', 'error']
@@ -18,7 +18,7 @@ stop_flag = threading.Event()
 
 def setup_window():
     window = tk.Tk()
-    greeting = tk.Label(window, text=f'CodecRenameUtility {VERSION_NUMBER}', fg='white', bg='purple')
+    greeting = tk.Label(window, text=f'CodecFinderUtility {VERSION_NUMBER}', fg='white', bg='purple')
     greeting.pack()
     return window
 
