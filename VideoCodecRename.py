@@ -5,13 +5,14 @@ import datetime
 import subprocess
 import json
 import threading
+import multiprocessing
 
 APP_NAME = 'CodecFinderUtility'
 VERSION_NUMBER = '2.0-dev'
 
 VIDEO_EXTENSIONS = ['.mov', '.mp4', '.mkv', '.avi', '.m4v', '.mpg']
 
-stop_flag = threading.Event()
+
 
 ### Setup functions -------------------------------------------------------------------------
 
@@ -41,17 +42,17 @@ def setup_buttons(window):
 
     buttons = {
         'list': [
-            ('List All Files', 'grey', lambda event: start_thread(list_all, path_entry.get(), 'File List Operation')),
-            ('Find Video Files (list codec)', 'blue', lambda event: start_thread(find_videos, path_entry.get(), 'Video Search Operation')),
-            ('Find non-HEVC', 'purple', lambda event: start_thread(find_nonHEVC, path_entry.get(), 'Non-HEVC Video Search Operation'))
+            ('List All Files', 'grey', lambda: start_thread(list_all, path_entry.get(), 'File List Operation')),
+            ('Find Video Files (list codec)', 'blue', lambda: start_thread(find_videos, path_entry.get(), 'Video Search Operation')),
+            ('Find non-HEVC', 'purple', lambda: start_thread(find_nonHEVC, path_entry.get(), 'Non-HEVC Video Search Operation'))
         ],
         'edit': [
-            ('Add Codec To Name', 'green', lambda event: start_thread(add_codec_to_name, path_entry.get(), 'Add Video Codec To File Name')),
-            ('Remove Codec From Name', 'red', lambda event: start_thread(remove_codec_from_name, path_entry.get(), 'Remove Video Codec From File Name'))
+            ('Add Codec To Name', 'green', lambda: start_thread(add_codec_to_name, path_entry.get(), 'Add Video Codec To File Name')),
+            ('Remove Codec From Name', 'red', lambda: start_thread(remove_codec_from_name, path_entry.get(), 'Remove Video Codec From File Name'))
         ],
         'meta': [
-            ('Clear Output Display', 'orange', lambda event: clear_screen_pressed(event)),
-            ('Stop Processing', 'red', lambda event: stop_processing_pressed(event))
+            ('Clear Output Display', 'orange', lambda: clear_screen_pressed(None)),
+            ('Stop Processing', 'red', lambda: stop_processing_pressed(None))
         ]
     }
 
@@ -59,7 +60,7 @@ def setup_buttons(window):
         for text, color, command in buttons_list:
             button = tk.Button(frame, text=text, width=20 if frame != frames['meta'] else 25, height=2, bg=color, fg='white')
             button.pack(pady=5)
-            button.bind('<Button-1>', command)
+            button.config(command=command)
 
     for key, button_list in buttons.items():
         create_buttons(button_list, frames[key])
@@ -94,8 +95,13 @@ def is_video_file(file_name):
     extension = os.path.splitext(file_name)[1].lower()
     return extension in VIDEO_EXTENSIONS
 
+def normalize_path(path):
+    return r'\\?\{}'.format(path)
+
 def get_all_files(path):
+    path = normalize_path(path)
     return [os.path.join(r, file) for r, d, f in sorted(os.walk(path, topdown=True)) for file in f]
+
 
 def stop_processing_pressed(event):
     stop_flag.set()
@@ -132,48 +138,64 @@ def start_thread(operation, *args):
     stop_flag.clear()
     threading.Thread(target=perform_operation_with_timing, args=(args[-1], operation) + args[:-1]).start()
 
+def worker_get_video_codec(file_path):
+    return file_path, get_video_codec(file_path)
+
+
+def worker_rename_file(file, new_name, result_queue):
+    try:
+        os.rename(file, new_name)
+        result_queue.put((file, new_name, None))
+    except Exception as e:
+        result_queue.put((file, None, str(e)))
+
 ### Real functions -------------------------------------------------------------------------
 
 def find_videos(path):
     total_count = 0
-
     all_files = get_all_files(path)
     update_progress_bar(0, len(all_files))
 
-    for idx, file in enumerate(all_files):
-        if stop_flag.is_set():
-            break
-        if is_video_file(file):
-            total_count += 1
-            codec = get_video_codec(file)
-            output_box.insert('1.0', f'{file} - Codec: {codec}\n')
-            output_box.update_idletasks()
-        
-        update_progress_bar(idx + 1, len(all_files))
+    with multiprocessing.Pool() as pool:
+        codecs = pool.map(worker_get_video_codec, all_files)
+
+        for idx, (file, codec) in enumerate(zip(all_files, codecs)):
+            if stop_flag.is_set():
+                break
+            if is_video_file(file):
+                total_count += 1
+                output_box.insert('1.0', f'{file} - Codec: {codec[1]}\n')
+                output_box.update_idletasks()
+            update_progress_bar(idx + 1, len(all_files))
+
     output_box.insert('1.0', f'Total Videos Found: {total_count}\n', ('bold', 'UI'))
+
 
 def find_nonHEVC(path):
     total_count = 0
     folder_stats = {}
     all_files = get_all_files(path)
     update_progress_bar(0, len(all_files))
-    for idx, file in enumerate(all_files):
-        if stop_flag.is_set():
-            break
-        if is_video_file(file):
-            codec = get_video_codec(file)
-            if codec != "hevc":
-                total_count += 1
-                output_box.insert('1.0', f'{file} - Codec: {codec}\n')
-                output_box.update_idletasks()
-                
-                relative_path = os.path.relpath(file, path)
-                top_level_folder = relative_path.split(os.sep)[0]
 
-                if top_level_folder not in folder_stats:
-                    folder_stats[top_level_folder] = 0
-                folder_stats[top_level_folder] += 1
-        update_progress_bar(idx + 1, len(all_files))
+    with multiprocessing.Pool() as pool:
+        codecs = pool.map(worker_get_video_codec, all_files)
+
+        for idx, (file, codec) in enumerate(zip(all_files, codecs)):
+            if stop_flag.is_set():
+                break
+            if is_video_file(file):
+                if codec[1] != "hevc":
+                    total_count += 1
+                    output_box.insert('1.0', f'{file} - Codec: {codec[1]}\n')
+                    output_box.update_idletasks()
+
+                    relative_path = os.path.relpath(file, normalize_path(path))
+                    top_level_folder = relative_path.split(os.sep)[0]
+
+                    if top_level_folder not in folder_stats:
+                        folder_stats[top_level_folder] = 0
+                    folder_stats[top_level_folder] += 1
+            update_progress_bar(idx + 1, len(all_files))
 
     if total_count != 0:
         for folder, count in folder_stats.items():
@@ -205,31 +227,32 @@ def add_codec_to_name(path):
     all_files = get_all_files(path)
     update_progress_bar(0, len(all_files))
 
-    for idx, file in enumerate(all_files):
-        if stop_flag.is_set():
-            break
-        total_count += 1
-        if is_video_file(file):
-            extension = os.path.splitext(file)[1]
-            try:
-                codec = get_video_codec(file)
-                base_name = os.path.splitext(file)[0]
-                if f'[{codec}]' not in base_name:
-                    new_name = f'{base_name}[{codec}]{extension}'
-                    os.rename(file, new_name)
-                    video_count += 1
-                    output_box.insert('1.0', f'Renamed: {new_name}\n')
-                else:
-                    output_box.insert('1.0', f'Skipped (codec already in name): {file}\n')
-            except Exception as e:
-                errors += 1
-                error_name = f'{base_name}[ERROR]{extension}'
-                os.rename(file, error_name)
-                output_box.insert('1.0', f'Error renaming: {error_name}\n')
-        update_progress_bar(idx + 1, len(all_files))
+    with multiprocessing.Pool() as pool:
+        codecs = pool.map(worker_get_video_codec, all_files)
+
+        for idx, (file, codec) in enumerate(zip(all_files, codecs)):
+            if stop_flag.is_set():
+                break
+            total_count += 1
+            if is_video_file(file):
+                extension = os.path.splitext(file)[1]
+                try:
+                    base_name = os.path.splitext(file)[0]
+                    if f'[{codec[1]}]' not in base_name:
+                        new_name = f'{base_name}[{codec[1]}]{extension}'
+                        os.rename(file, new_name)
+                        video_count += 1
+                        output_box.insert('1.0', f'Renamed: {new_name}\n')
+                    else:
+                        output_box.insert('1.0', f'Skipped (codec already in name): {file}\n')
+                except Exception as e:
+                    errors += 1
+                    error_name = f'{base_name}[ERROR]{extension}'
+                    os.rename(file, error_name)
+                    output_box.insert('1.0', f'Error renaming: {error_name}\n')
+            update_progress_bar(idx + 1, len(all_files))
 
     output_box.insert('1.0', f'{"-" * 20}\nFiles Renamed: {video_count}\nFiles Scanned: {total_count}\nErrors Encountered: {errors}\n', ('UI'))
-
 
 def remove_codec_from_name(path):
     total_count = 0
@@ -237,33 +260,40 @@ def remove_codec_from_name(path):
     all_files = get_all_files(path)
     update_progress_bar(0, len(all_files))
 
-    for idx, file in enumerate(all_files):
-        if stop_flag.is_set():
-            break
-        if is_video_file(file):
-            codec = get_video_codec(file)
-            if codec:
-                base_name = os.path.splitext(file)[0]
-                extension = os.path.splitext(file)[1]
-                if f'[{codec}]' in base_name:
-                    final_name = f'{base_name.split(f"[{codec}]")[0]}{extension}'
-                    try:
-                        os.rename(file, final_name)
-                        total_count += 1
-                        output_box.insert('1.0', f'Renamed: {final_name}\n')
-                    except Exception as e:
-                        errors += 1
-                        output_box.insert('1.0', f'Error renaming: {file} - {str(e)}\n')
-        update_progress_bar(idx + 1, len(all_files))
+    with multiprocessing.Pool() as pool:
+        codecs = pool.map(worker_get_video_codec, all_files)
+
+        for idx, (file, codec) in enumerate(zip(all_files, codecs)):
+            if stop_flag.is_set():
+                break
+            if is_video_file(file):
+                if codec[1]:
+                    base_name = os.path.splitext(file)[0]
+                    extension = os.path.splitext(file)[1]
+                    if f'[{codec[1]}]' in base_name:
+                        final_name = f'{base_name.split(f"[{codec[1]}]")[0]}{extension}'
+                        try:
+                            os.rename(file, final_name)
+                            total_count += 1
+                            output_box.insert('1.0', f'Renamed: {final_name}\n')
+                        except Exception as e:
+                            errors += 1
+                            output_box.insert('1.0', f'Error renaming: {file} - {str(e)}\n')
+            update_progress_bar(idx + 1, len(all_files))
 
     output_box.insert('1.0', f'{"-" * 20}\nFiles Renamed: {total_count}\nErrors Encountered: {errors}\nCodec Remove Operation Completed.\n', ('UI'))
 
+### Main Execution --------------------------------------------------------------
 
+if __name__ == '__main__':
+    global stop_flag, output_box, progress_bar, window
 
-window = setup_window()
-path_entry = setup_entry(window)
-setup_buttons(window)
-progress_bar = setup_progress_bar(window)
-output_box = setup_output_box(window)
+    window = setup_window()
+    path_entry = setup_entry(window)
+    setup_buttons(window)
+    progress_bar = setup_progress_bar(window)
+    output_box = setup_output_box(window)
+    stop_flag = threading.Event()
 
-window.mainloop()
+    # Start the main event loop
+    window.mainloop()
