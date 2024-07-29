@@ -24,7 +24,7 @@ def setup_window():
 
 def setup_entry(window):
     tk.Label(window, text='Working Directory').pack()
-    path_entry = tk.Entry(window, width=350)
+    path_entry = tk.Entry(window, width=200)
     path_entry.pack()
     return path_entry
 
@@ -51,6 +51,8 @@ def setup_output_box(window):
     tk.Label(window, text='Output').pack(fill='x')
     output_box = tk.Text(window, width=100, height=50)
     output_box.pack(fill='both', expand=True)
+    output_box.tag_configure('bold', font=('Helvetica', 10, 'bold'))
+    output_box.tag_configure('red', foreground='white', background='red')
     return output_box
 
 def setup_progress_bar(window):
@@ -78,6 +80,7 @@ def get_all_files(path):
 
 def stop_processing_pressed(event):
     stop_flag.set()
+    output_box.insert('1.0', 'Processing stopped by user.', ('bold', 'red'), '\n')
 
 def get_video_codec(file_path):
     try:
@@ -103,7 +106,7 @@ def perform_operation_with_timing(operation_name, operation, *args):
     finally:
         end_time = datetime.datetime.now()
         runtime = end_time - start_time
-        output_box.insert('1.0', f'{"-" * 20}\n{operation_name} Completed: {end_time}\nTotal Runtime: {runtime}\n{"-" * 20}\n')
+        output_box.insert('1.0', f'{"-" * 20}\nTotal Runtime: {runtime}\n{operation_name} Completed: {end_time}\n')
 
 def start_thread(operation, *args):
     global stop_flag
@@ -120,7 +123,6 @@ def find_videos(path):
 
     for idx, file in enumerate(all_files):
         if stop_flag.is_set():
-            output_box.insert('1.0', 'Processing stopped by user.\n')
             break
         if is_video_file(file):
             total_count += 1
@@ -136,7 +138,6 @@ def find_nonHEVC(path):
     update_progress_bar(0, len(all_files))
     for idx, file in enumerate(all_files):
         if stop_flag.is_set():
-            output_box.insert('1.0', 'Processing stopped by user.\n')
             break
         if is_video_file(file):
             codec = get_video_codec(file)
@@ -155,7 +156,6 @@ def list_all(path):
     update_progress_bar(0, len(all_files))
     for idx, file in enumerate(all_files):
         if stop_flag.is_set():
-            output_box.insert('1.0', 'Processing stopped by user.\n')
             break
         total_count += 1
         output_box.insert('1.0', f'{file}\n')
