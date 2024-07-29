@@ -1,9 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import os
-from ffprobe3 import FFProbe
 import datetime
-import re
 import subprocess
 import json
 import threading
@@ -180,7 +178,7 @@ def find_nonHEVC(path):
                 output_box.update_idletasks()
         update_progress_bar(idx + 1, len(all_files))
 
-    if total_count == 0:
+    if total_count == 0 and not stop_flag.is_set():
         output_box.insert('1.0', f'\n █████  ██      ██          ███████ ██ ██      ███████ ███████     ██   ██ ███████ ██    ██  ██████ \n██   ██ ██      ██          ██      ██ ██      ██      ██          ██   ██ ██      ██    ██ ██      \n███████ ██      ██          █████   ██ ██      █████   ███████     ███████ █████   ██    ██ ██      \n██   ██ ██      ██          ██      ██ ██      ██           ██     ██   ██ ██       ██  ██  ██      \n██   ██ ███████ ███████     ██      ██ ███████ ███████ ███████     ██   ██ ███████   ████    ██████ \n\n')
 
     end_time = datetime.datetime.now()  # Record end time
