@@ -44,7 +44,7 @@ def setup_buttons(window):
         'list': [
             ('List All Files', 'grey', lambda: start_thread(list_all, path_entry.get(), 'File List Operation')),
             ('Find Video Files (list codec)', 'blue', lambda: start_thread(find_videos, path_entry.get(), 'Video Search Operation')),
-            ('Find non-HEVC', 'purple', lambda: start_thread(find_nonHEVC, path_entry.get(), 'Non-HEVC Video Search Operation'))
+            ('Find non-HEVC or non-AV1', 'purple', lambda: start_thread(find_nonHEVC_or_nonAV1, path_entry.get(), 'Non-HEVC or non-AV1 Video Search Operation'))
         ],
         'edit': [
             ('Add Codec To Name', 'green', lambda: start_thread(add_codec_to_name, path_entry.get(), 'Add Video Codec To File Name')),
@@ -171,7 +171,7 @@ def find_videos(path):
     output_box.insert('1.0', f'Total Videos Found: {total_count}\n', ('bold', 'UI'))
 
 
-def find_nonHEVC(path):
+def find_nonHEVC_or_nonAV1(path):
     total_count = 0
     folder_stats = {}
     all_files = get_all_files(path)
@@ -184,7 +184,7 @@ def find_nonHEVC(path):
             if stop_flag.is_set():
                 break
             if is_video_file(file):
-                if codec[1] != "hevc":
+                if codec[1] != "hevc" and codec[1] != "av1":
                     total_count += 1
                     output_box.insert('1.0', f'{file} - Codec: {codec[1]}\n')
                     output_box.update_idletasks()
@@ -199,13 +199,18 @@ def find_nonHEVC(path):
 
     if total_count != 0:
         for folder, count in folder_stats.items():
-            output_box.insert('1.0', f'  Non-HEVC Videos Count: {count}\n\n')
+            output_box.insert('1.0', f'  Non-HEVC or non-AV1 Videos Count: {count}\n\n')
             output_box.insert('1.0', f'Folder: {folder}\n')
             output_box.update_idletasks()
-        output_box.insert('1.0', f'Total non-HEVC Found: {total_count}\n', ('bold', 'UI'))
+        output_box.insert('1.0', f'Total non-HEVC or non-AV1 Found: {total_count}\n', ('bold', 'UI'))
         
     if total_count == 0 and not stop_flag.is_set():
-        output_box.insert('1.0', f'\n █████  ██      ██          ███████ ██ ██      ███████ ███████     ██   ██ ███████ ██    ██  ██████ \n██   ██ ██      ██          ██      ██ ██      ██      ██          ██   ██ ██      ██    ██ ██      \n███████ ██      ██          █████   ██ ██      █████   ███████     ███████ █████   ██    ██ ██      \n██   ██ ██      ██          ██      ██ ██      ██           ██     ██   ██ ██       ██  ██  ██      \n██   ██ ███████ ███████     ██      ██ ███████ ███████ ███████     ██   ██ ███████   ████    ██████ \n\n')
+        output_box.insert('1.0', f'\n'
+                            f' █████  ██      ██          ██   ██ ███████ ██    ██  ██████      ██████  ██████       █████  ██    ██  ██ \n'
+                            f'██   ██ ██      ██          ██   ██ ██      ██    ██ ██          ██    ██ ██   ██     ██   ██ ██    ██ ███ \n'
+                            f'███████ ██      ██          ███████ █████   ██    ██ ██          ██    ██ ██████      ███████ ██    ██  ██ \n'
+                            f'██   ██ ██      ██          ██   ██ ██       ██  ██  ██          ██    ██ ██   ██     ██   ██  ██  ██   ██ \n'
+                            f'██   ██ ███████ ███████     ██   ██ ███████   ████    ██████      ██████  ██   ██     ██   ██   ████    ██  \n\n')
 
 def list_all(path):
     total_count = 0
