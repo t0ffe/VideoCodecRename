@@ -66,6 +66,9 @@ def is_video_file(file_name):
     extension = os.path.splitext(file_name)[1].lower()
     return extension in VIDEO_EXTENSIONS
 
+def get_all_files(path):
+    return [os.path.join(r, file) for r, d, f in sorted(os.walk(path, topdown=True)) for file in f]
+
 #def add_pressed(event):
 #    path = path_entry.get()
 #    total_count = 0
@@ -119,7 +122,7 @@ def find_videos(path):
     start_time = datetime.datetime.now()  # Record start time
     output_box.insert('1.0', f'Video Search Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
 
-    all_files = [os.path.join(r, file) for r, d, f in sorted(os.walk(path, topdown=True)) for file in f]
+    all_files = get_all_files(path)
     update_progress_bar(0, len(all_files))
 
     for idx, file in enumerate(all_files):
@@ -146,7 +149,7 @@ def find_nonHEVC(path):
     start_time = datetime.datetime.now()
     output_box.insert('1.0', f'Video Search Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
 
-    all_files = [os.path.join(r, file) for r, d, f in sorted(os.walk(path, topdown=True)) for file in f]
+    all_files = get_all_files(path)
     update_progress_bar(0, len(all_files))
 
     for idx, file in enumerate(all_files):
@@ -175,7 +178,7 @@ def list_all(path):
 
     start_time = datetime.datetime.now()
     
-    all_files = [os.path.join(r, file) for r, d, f in sorted(os.walk(path, topdown=True)) for file in f]
+    all_files = get_all_files(path)
     update_progress_bar(0, len(all_files))
     
     for idx, file in enumerate(all_files):
