@@ -166,11 +166,13 @@ def find_nonHEVC(path):
                 total_count += 1
                 output_box.insert('1.0', f'{file} - Codec: {codec}\n')
                 output_box.update_idletasks()
-                parent_folder = os.path.basename(os.path.dirname(file))
-                folder = os.path.join(os.path.basename(path), parent_folder)
-                if folder not in folder_stats:
-                    folder_stats[folder] = 0
-                folder_stats[folder] += 1
+                
+                relative_path = os.path.relpath(file, path)
+                top_level_folder = relative_path.split(os.sep)[0]
+
+                if top_level_folder not in folder_stats:
+                    folder_stats[top_level_folder] = 0
+                folder_stats[top_level_folder] += 1
         update_progress_bar(idx + 1, len(all_files))
 
     if total_count != 0:
