@@ -21,7 +21,7 @@ def setup_window():
 
 def setup_entry(window):
     tk.Label(window, text='Working Directory').pack()
-    path_entry = tk.Entry(window, width=100)
+    path_entry = tk.Entry(window, width=350)
     path_entry.pack()
     return path_entry
 
@@ -133,6 +133,9 @@ def find_nonHEVC(path):
                     total_count += 1
                     output_box.insert('1.0', f'{current} - Codec: {codec}\n')
                     output_box.update_idletasks()
+    if total_count == 0:
+        output_box.insert('1.0', f'\n █████  ██      ██          ███████ ██ ██      ███████ ███████     ██   ██ ███████ ██    ██  ██████ \n██   ██ ██      ██          ██      ██ ██      ██      ██          ██   ██ ██      ██    ██ ██      \n███████ ██      ██          █████   ██ ██      █████   ███████     ███████ █████   ██    ██ ██      \n██   ██ ██      ██          ██      ██ ██      ██           ██     ██   ██ ██       ██  ██  ██      \n██   ██ ███████ ███████     ██      ██ ███████ ███████ ███████     ██   ██ ███████   ████    ██████ \n\n')
+
 
     output_box.insert('1.0', f'{"-" * 20}\nVideos Found: {total_count}\nVideo Search Operation Completed: {datetime.datetime.now()}\n{"-" * 20}\n')
 
