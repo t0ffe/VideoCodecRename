@@ -14,6 +14,9 @@ VIDEO_EXTENSIONS = ['.mov', '.mp4', '.mkv', '.avi', '.m4v', '.mpg']
 VIDEO_CODECS = ['utvideo', 'dnxhd', 'h265', 'h264', 'xvid', 'mpeg4', 'msmpeg4v3', 'error']
 VIDEO_CODEC_COUNTS = {codec: 0 for codec in VIDEO_CODECS}
 
+# Global flag to control processing
+stop_flag = threading.Event()
+
 def setup_window():
     window = tk.Tk()
     greeting = tk.Label(window, text=f'CodecRenameUtility {VERSION_NUMBER}', fg='white', bg='purple')
@@ -33,12 +36,16 @@ def setup_buttons(window):
         ('Find non-HEVC', 'red', find_nonHEVC_pressed),
         #('Add Video Codec To File Name', 'green', add_pressed),
         #('Remove Video Codec From File Name', 'red', remove_pressed),
-        ('Clear Output Display', 'orange', clear_screen_pressed, 25)
+        ('Clear Output Display', 'orange', clear_screen_pressed, 25),
+        ('Stop Processing', 'black', stop_processing_pressed)  
     ]
     
+    button_frame = tk.Frame(window)  
+    button_frame.pack(pady=10)  
+    
     for text, color, command, *width in buttons:
-        button = tk.Button(window, text=text, width=width[0] if width else 50, height=2, bg=color, fg='white')
-        button.pack()
+        button = tk.Button(button_frame, text=text, width=width[0] if width else 20, height=2, bg=color, fg='white')
+        button.pack(side='left', padx=5, pady=5)
         button.bind('<Button-1>', command)
 
 def setup_output_box(window):
@@ -68,6 +75,9 @@ def is_video_file(file_name):
 
 def get_all_files(path):
     return [os.path.join(r, file) for r, d, f in sorted(os.walk(path, topdown=True)) for file in f]
+
+def stop_processing_pressed(event):
+    stop_flag.set()  # Signal to stop processing
 
 #def add_pressed(event):
 #    path = path_entry.get()
@@ -126,6 +136,9 @@ def find_videos(path):
     update_progress_bar(0, len(all_files))
 
     for idx, file in enumerate(all_files):
+        if stop_flag.is_set():  # Check if stop has been requested
+            output_box.insert('1.0', 'Processing stopped by user.\n')
+            break
         if is_video_file(file):
             current = file
             total_count += 1
@@ -140,6 +153,8 @@ def find_videos(path):
     output_box.insert('1.0', f'{"-" * 20}\nVideos Found: {total_count}\nVideo Search Operation Completed: {datetime.datetime.now()}\nTotal Runtime: {runtime}\n{"-" * 20}\n')
 
 def find_videos_pressed(event):
+    global stop_flag
+    stop_flag.clear()  # Reset the stop flag
     path = path_entry.get()
     threading.Thread(target=find_videos, args=(path,)).start()
 
@@ -153,6 +168,9 @@ def find_nonHEVC(path):
     update_progress_bar(0, len(all_files))
 
     for idx, file in enumerate(all_files):
+        if stop_flag.is_set():  # Check if stop has been requested
+            output_box.insert('1.0', 'Processing stopped by user.\n')
+            break
         if is_video_file(file):
             current = file
             codec = get_video_codec(current)
@@ -170,6 +188,8 @@ def find_nonHEVC(path):
     output_box.insert('1.0', f'{"-" * 20}\nVideos Found: {total_count}\nVideo Search Operation Completed: {datetime.datetime.now()}\nTotal Runtime: {runtime}\n{"-" * 20}\n')
 
 def find_nonHEVC_pressed(event):
+    global stop_flag
+    stop_flag.clear()  # Reset the stop flag
     path = path_entry.get()
     threading.Thread(target=find_nonHEVC, args=(path,)).start()
 
@@ -182,6 +202,9 @@ def list_all(path):
     update_progress_bar(0, len(all_files))
     
     for idx, file in enumerate(all_files):
+        if stop_flag.is_set():  # Check if stop has been requested
+            output_box.insert('1.0', 'Processing stopped by user.\n')
+            break
         current = file
         total_count += 1
         output_box.insert('1.0', f'{current}\n')
@@ -192,6 +215,8 @@ def list_all(path):
     output_box.insert('1.0', f'{"-" * 20}\nFiles Found: {total_count}\nFile List Operation Completed: {datetime.datetime.now()}\nTotal Runtime: {runtime}\n{"-" * 20}\n')
 
 def list_all_pressed(event):
+    global stop_flag
+    stop_flag.clear()  # Reset the stop flag
     path = path_entry.get()
     threading.Thread(target=list_all, args=(path,)).start()
 
