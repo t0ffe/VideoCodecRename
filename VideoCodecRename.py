@@ -30,13 +30,13 @@ def setup_entry(window):
 
 def setup_buttons(window):
     buttons = [
-        ('List All Files', 'grey', list_all_pressed),
-        ('Find Video Files (list codec)', 'blue', find_videos_pressed),
-        ('Find non-HEVC', 'red', find_nonHEVC_pressed),
+        ('List All Files', 'grey', lambda event: start_thread(list_all, path_entry.get(), 'File List Operation')),
+        ('Find Video Files (list codec)', 'blue', lambda event: start_thread(find_videos, path_entry.get(), 'Video Search Operation')),
+        ('Find non-HEVC', 'red', lambda event: start_thread(find_nonHEVC, path_entry.get(), 'Non-HEVC Video Search Operation')),
         #('Add Video Codec To File Name', 'green', add_pressed),
         #('Remove Video Codec From File Name', 'red', remove_pressed),
-        ('Clear Output Display', 'orange', clear_screen_pressed, 25),
-        ('Stop Processing', 'black', stop_processing_pressed)  
+        ('Clear Output Display', 'orange', lambda event: clear_screen_pressed(event), 25),
+        ('Stop Processing', 'black', lambda event: stop_processing_pressed(event))
     ]
     
     button_frame = tk.Frame(window)  
@@ -105,6 +105,11 @@ def perform_operation_with_timing(operation_name, operation, *args):
         runtime = end_time - start_time
         output_box.insert('1.0', f'{"-" * 20}\n{operation_name} Completed: {end_time}\nTotal Runtime: {runtime}\n{"-" * 20}\n')
 
+def start_thread(operation, *args):
+    global stop_flag
+    stop_flag.clear()
+    threading.Thread(target=perform_operation_with_timing, args=(args[-1], operation) + args[:-1]).start()
+
 ### Real functions -------------------------------------------------------------------------
 
 def find_videos(path):
@@ -125,12 +130,6 @@ def find_videos(path):
         
         update_progress_bar(idx + 1, len(all_files))
 
-def find_videos_pressed(event):
-    global stop_flag
-    stop_flag.clear()
-    path = path_entry.get()
-    threading.Thread(target=perform_operation_with_timing, args=('Video Search Operation', find_videos, path)).start()
-
 def find_nonHEVC(path):
     total_count = 0
     all_files = get_all_files(path)
@@ -150,12 +149,6 @@ def find_nonHEVC(path):
     if total_count == 0 and not stop_flag.is_set():
         output_box.insert('1.0', f'\n █████  ██      ██          ███████ ██ ██      ███████ ███████     ██   ██ ███████ ██    ██  ██████ \n██   ██ ██      ██          ██      ██ ██      ██      ██          ██   ██ ██      ██    ██ ██      \n███████ ██      ██          █████   ██ ██      █████   ███████     ███████ █████   ██    ██ ██      \n██   ██ ██      ██          ██      ██ ██      ██           ██     ██   ██ ██       ██  ██  ██      \n██   ██ ███████ ███████     ██      ██ ███████ ███████ ███████     ██   ██ ███████   ████    ██████ \n\n')
 
-def find_nonHEVC_pressed(event):
-    global stop_flag
-    stop_flag.clear()
-    path = path_entry.get()
-    threading.Thread(target=perform_operation_with_timing, args=('Non-HEVC Video Search Operation', find_nonHEVC, path)).start()
-
 def list_all(path):
     total_count = 0
     all_files = get_all_files(path)
@@ -167,12 +160,6 @@ def list_all(path):
         total_count += 1
         output_box.insert('1.0', f'{file}\n')
         update_progress_bar(idx + 1, len(all_files))
-
-def list_all_pressed(event):
-    global stop_flag
-    stop_flag.clear()
-    path = path_entry.get()
-    threading.Thread(target=perform_operation_with_timing, args=('File List Operation', list_all, path)).start()
 
 
 #def add_pressed(event):
