@@ -123,18 +123,26 @@ def get_video_codec(file_path):
             raise Exception(result.stderr)
     except Exception as e:
         return f'Error: {str(e)}'
+    
+def perform_operation_with_timing(operation_name, operation, *args):
+    start_time = datetime.datetime.now()
+    output_box.insert('1.0', f'{operation_name} Started: {start_time}\n{"-" * 20}\n')
+    try:
+        operation(*args)
+    finally:
+        end_time = datetime.datetime.now()
+        runtime = end_time - start_time
+        output_box.insert('1.0', f'{"-" * 20}\n{operation_name} Completed: {end_time}\nTotal Runtime: {runtime}\n{"-" * 20}\n')
+
 
 def find_videos(path):
     total_count = 0
-
-    start_time = datetime.datetime.now()  # Record start time
-    output_box.insert('1.0', f'Video Search Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
 
     all_files = get_all_files(path)
     update_progress_bar(0, len(all_files))
 
     for idx, file in enumerate(all_files):
-        if stop_flag.is_set():  # Check if stop has been requested
+        if stop_flag.is_set():
             output_box.insert('1.0', 'Processing stopped by user.\n')
             break
         if is_video_file(file):
@@ -145,78 +153,56 @@ def find_videos(path):
             output_box.update_idletasks()
         
         update_progress_bar(idx + 1, len(all_files))
-    
-    end_time = datetime.datetime.now()  # Record end time
-    runtime = end_time - start_time  # Calculate runtime
-    output_box.insert('1.0', f'{"-" * 20}\nVideos Found: {total_count}\nVideo Search Operation Completed: {datetime.datetime.now()}\nTotal Runtime: {runtime}\n{"-" * 20}\n')
 
 def find_videos_pressed(event):
     global stop_flag
     stop_flag.clear()  # Reset the stop flag
     path = path_entry.get()
-    threading.Thread(target=find_videos, args=(path,)).start()
+    threading.Thread(target=perform_operation_with_timing, args=('Video Search Operation', find_videos, path)).start()
 
 def find_nonHEVC(path):
     total_count = 0
-
-    start_time = datetime.datetime.now()
-    output_box.insert('1.0', f'Video Search Operation Started: {datetime.datetime.now()}\n{"-" * 20}\n')
-
     all_files = get_all_files(path)
     update_progress_bar(0, len(all_files))
-
     for idx, file in enumerate(all_files):
-        if stop_flag.is_set():  # Check if stop has been requested
+        if stop_flag.is_set():
             output_box.insert('1.0', 'Processing stopped by user.\n')
             break
         if is_video_file(file):
-            current = file
-            codec = get_video_codec(current)
+            codec = get_video_codec(file)
             if codec != "hevc":
                 total_count += 1
-                output_box.insert('1.0', f'{current} - Codec: {codec}\n')
+                output_box.insert('1.0', f'{file} - Codec: {codec}\n')
                 output_box.update_idletasks()
         update_progress_bar(idx + 1, len(all_files))
 
     if total_count == 0 and not stop_flag.is_set():
         output_box.insert('1.0', f'\n █████  ██      ██          ███████ ██ ██      ███████ ███████     ██   ██ ███████ ██    ██  ██████ \n██   ██ ██      ██          ██      ██ ██      ██      ██          ██   ██ ██      ██    ██ ██      \n███████ ██      ██          █████   ██ ██      █████   ███████     ███████ █████   ██    ██ ██      \n██   ██ ██      ██          ██      ██ ██      ██           ██     ██   ██ ██       ██  ██  ██      \n██   ██ ███████ ███████     ██      ██ ███████ ███████ ███████     ██   ██ ███████   ████    ██████ \n\n')
 
-    end_time = datetime.datetime.now()  # Record end time
-    runtime = end_time - start_time  # Calculate runtime
-    output_box.insert('1.0', f'{"-" * 20}\nVideos Found: {total_count}\nVideo Search Operation Completed: {datetime.datetime.now()}\nTotal Runtime: {runtime}\n{"-" * 20}\n')
-
 def find_nonHEVC_pressed(event):
     global stop_flag
     stop_flag.clear()  # Reset the stop flag
     path = path_entry.get()
-    threading.Thread(target=find_nonHEVC, args=(path,)).start()
+    threading.Thread(target=perform_operation_with_timing, args=('Non-HEVC Video Search Operation', find_nonHEVC, path)).start()
 
 def list_all(path):
     total_count = 0
-
-    start_time = datetime.datetime.now()
-    
     all_files = get_all_files(path)
     update_progress_bar(0, len(all_files))
-    
     for idx, file in enumerate(all_files):
-        if stop_flag.is_set():  # Check if stop has been requested
+        if stop_flag.is_set():
             output_box.insert('1.0', 'Processing stopped by user.\n')
             break
         current = file
         total_count += 1
         output_box.insert('1.0', f'{current}\n')
         update_progress_bar(idx + 1, len(all_files))
-    
-    end_time = datetime.datetime.now()  # Record end time
-    runtime = end_time - start_time  # Calculate runtime
-    output_box.insert('1.0', f'{"-" * 20}\nFiles Found: {total_count}\nFile List Operation Completed: {datetime.datetime.now()}\nTotal Runtime: {runtime}\n{"-" * 20}\n')
 
 def list_all_pressed(event):
     global stop_flag
     stop_flag.clear()  # Reset the stop flag
     path = path_entry.get()
-    threading.Thread(target=list_all, args=(path,)).start()
+    threading.Thread(target=perform_operation_with_timing, args=('File List Operation', list_all, path)).start()
 
 #def remove_pressed(event):
 #    path = path_entry.get()
