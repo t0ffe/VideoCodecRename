@@ -1,21 +1,3 @@
-"""
-Release Notes: 1.2
-
-- Removed import serial line.
-- Updated version number.
-- Replaced <'{}'.format(stream.codec())> with <stream.codec()>.
-- Replaced " with ' for consistency.
-- Updated version number in window.
-- Replaced <if ex in file.lower()> with <if ex in file.lower().lower()> to ensure that extensions of any case will be read properly.
-- Created a dictionary for the video codec counts to clean up the code: VideoCodecCounts[].
-- Function check_pressed renamed to find_videos_pressed.
-- Changed how extensions are handled. Can now handle extensions of any length, such as .m2ts.
-- Added file counts to all operations.
-- Standardized all output formatting for all operations.
-- Set each operation to reset variable TotalCount after it ran to ensure accurate counts between operations.
-- Replaced <path = path_entry.get()> with <path = path_entry.get()>.
-"""
-
 import tkinter as tk
 import os
 from ffprobe3 import FFProbe
